@@ -1,6 +1,6 @@
 const GoogleStrategy = require("passport-google-oauth").OAuth2Strategy;
 require("dotenv").config();
-const user = require("../db/models/user/User.js");
+const user = require("../db/dao/user/UserDao");
 
 module.exports = (passport) => {
   passport.serializeUser((user, done) => {
