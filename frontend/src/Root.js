@@ -6,7 +6,7 @@ import {
 } from "react-router-dom";
 import App from "./App";
 import "bootstrap/dist/css/bootstrap.css";
-import LoginSuccess from "./components/login/LoginSuccess";
+import LoginSuccess from "./components/auth/LoginSuccess";
 
 const Root = () => {
   return (

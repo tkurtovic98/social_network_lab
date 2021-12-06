@@ -1,5 +1,5 @@
 const fetch = require("node-fetch");
-const nft = require("../../db/models/nfts/Nft");
+const nft = require("../../db/dao/nfts/NftDao");
 const Nft = require('../../structs/Nft')
 
 const options = { method: "GET" };
@@ -15,7 +15,7 @@ const fetchNftData = async (collectionName) => {
 
   let nftCollectionUrl = openSeaApiUrl(collectionName);
 
-  fetch(nftCollectionUrl, options)
+  return fetch(nftCollectionUrl, options)
     .then((response) => response.json())
     .then(async (response) => {
       console.log(response);
