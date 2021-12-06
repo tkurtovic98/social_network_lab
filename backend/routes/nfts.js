@@ -11,7 +11,7 @@ router.get("/info", async (req, res) => {
   if(nftData == "Error") {
     res.send("Error occured!")
   } else {
-    res.json(nftData)
+    res.json(nftData) 
   }
 });
 
