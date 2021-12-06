@@ -9,34 +9,26 @@ const auth = require("./routes/auth");
 const cookieParser = require("cookie-parser");
 const cookieSession = require("cookie-session");
 const weatherRoute = require("./routes/weather");
-const nftsRoute = require('./routes/nfts')
+const nftsRoute = require("./routes/nfts");
 const dbo = require("./db/conn");
 
-auth(passport);
-app.use(passport.initialize());
+const whitelist = ["http://localhost:3000"];
+const corsOptions = {
+  origin: function (origin, callback) {
+    if (!origin || whitelist.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true,
+};
+
+app.use(cors(corsOptions));
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-const allowedOrigins = ["http://localhost:3000"];
-
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      // allow requests with no origin (like mobile apps or curl requests)
-      if (!origin) return callback(null, true);
-      if (allowedOrigins.indexOf(origin) === -1) {
-        const msg =
-          "The CORS policy for this site does not " +
-          "allow access from the specified Origin.";
-        return callback(new Error(msg), false);
-      }
-      return callback(null, true);
-    },
-    credentials: true,
-  })
-);
-
-app.use(express.json());
 app.use(
   cookieSession({
     name: "session",
@@ -44,6 +36,16 @@ app.use(
   })
 );
 app.use(cookieParser());
+
+app.use(passport.initialize());
+auth(passport);
+
+app.get("/", (req, res) => {
+  if (!req.session.token) {
+    res.clearCookie('token');
+    res.json("Logged out");
+  }
+});
 
 app.get(
   "/auth/google",
@@ -55,26 +57,15 @@ app.get(
   })
 );
 
-app.get("/", (req, res) => {
-  if (req.session.token) {
-    res.cookie("token", req.session.token);
-    res.json({
-      status: "session cookie set",
-    });
-  } else {
-    res.cookie("token", "");
-    res.json({
-      status: "session cookie not set",
-    });
-  }
-});
-
 app.get(
   process.env.GOOGLE_AUTH_CALLBACK,
-  passport.authenticate("google", { failureRedirect: "/auth/fail" }),
+  passport.authenticate("google", {
+    failureRedirect: "/auth/fail",
+  }),
   (req, res) => {
     req.session.token = req.user.token;
-    res.redirect("/");
+    res.cookie("token", req.session.token);
+    res.redirect(process.env.CLIENT_CALLBACK_URL);
   }
 );
 
@@ -87,10 +78,10 @@ app.listen(port, () => {
 });
 
 //RESTRICTED//
-app.use((req,res,next) => {
-  if(!req.session.token) res.redirect("/")
-  else next()
-})
+app.use((req, res, next) => {
+  if (!req.session.token) res.redirect("/");
+  else next();
+});
 
 app.use("/weather", weatherRoute);
 
